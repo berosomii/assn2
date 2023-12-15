@@ -1,0 +1,134 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using static UnityEngine.ParticleSystem;
+
+public class collisionDetect : MonoBehaviour
+{
+    public GameObject Circle;
+    public GameObject Square;
+    public GameObject Capsule;
+
+    Circle circ = new Circle();
+    Square squa = new Square();
+    Capsule caps = new Capsule();
+
+
+
+    public void Update()
+    {
+    caps.pos = Capsule.transform.position;
+    caps.rad = Capsule.transform.localScale.x * 0.5f;
+    caps.dir = Capsule.transform.up;
+    caps.halfHeight = Capsule.transform.localScale.y *0.5f;
+    caps.top = caps.position + cap.direction * caps.halfHeight;
+    caps.bot = caps.position = cap.direction * caps.halfHeight;
+    //circle
+    circ.pos = Circle.transform.position;
+    circ.rad = Circle.transform.localScale.x * 0.5f;
+    //square
+    squa.pos = Square.transform.position;
+    squa.extents = new Vector3(Square.transform.localScale.x * 0.5f, Square.tranform.localScale.y * 0.5f);
+
+    //colour change
+
+    Vector2 mtv = Vector2.zero;
+
+     if (CheckCollisionCircleSquare(circ, squa))
+    {
+        Circle.GetComponent<SpriteRenderer>().color = Color.green;
+        Square.GetComponent<SpriteRenderer>().color = Color.green;
+
+    }
+    if (CheckCollisionCapsuleSquare(caps, squa))
+    {
+        Capsule.GetComponent<SpriteRenderer>().color = Color.green;
+        Square.GetComponent<SpriteRenderer>().color = Color.green;
+    }
+    if (CheckCollisionCircleCapsule(caps, circ, out mtv))
+    {
+        Capsule.GetComponent<SpriteRenderer>().color = Color.green;
+        Circle.GetComponent<SpriteRenderer>().color = Color.green;
+    }
+    else
+    {
+        Capsule.GetComponent<SpriteRenderer>().color = Color.red;
+        Circle.GetComponent<SpriteRenderer>().color = Color.red;
+        Square.GetComponent<SpriteRenderer>().color = Color.red;
+    }
+ }
+    void CapsulePoints(Vector2 position, Vector2 direction, float halfLength, out Vector2 top, out Vector2 bot)
+    {
+        top = position + direction * halfLength;
+        bot = position - direction * halfLength;
+    }
+    Vector2 ProjectPointLine(Vector2 P, Vector2 A, Vector2 B)
+    {
+        Vector2 AB = B - A;
+        Vector2 AP = P - A;
+        float t = Vector2.Dot(AB, AP) / Vector2.Dot(AB, AB);
+        t = Mathf.Clamp01(t);
+        return A + AB * t;
+    }
+
+    bool CheckCollisionCircleSquare(Circle, Square)
+    {
+        Vector2 closeToCirc = circle.pos;
+        closeToCirc.x = Mathf.Clamp(closeToCirc.x, square.pos.x - square.extents.x, square.pos.x + square.extents.x);
+        closeToCirc.y = Mathf.Clamp(closeToCirc.y, square.pos.y - square.extents.y, square.pos.y + square.extents.y);
+        
+         return Vector2.Distance(closeToCirc, circ.pos) <= circle.radius;
+
+    }
+    bool CheckCollisionCircleCapsule(Vector2 circPos, float circRad,
+        Vector2 capsPos, Vector2 capsDir, float capsuleRad, float halfLength, out Vector2 mtv)
+    {
+        Vector2 top;
+        Vector2 bot;
+
+        CapsulePoints(capsPos, capsDirection, halfLength, out top, out bot);
+
+       Vector2 circleProjection = ProjectPointLine(circPos, top, bot);
+
+        return CheckCollisionCircles(circPos, circRad, capsPos, capsRad, out mtv);
+
+    }
+     bool CheckCollisionCapsuleSquare(Capsule , Square)
+    {
+       
+        Vector3 AB = caps.bot - caps.top;
+        Vector3 AC = squa.pos - caps.top;
+        float t = Vector3.Dot(AB, AC) / Vector3.Dot(AB, AB);
+        t = Mathf.Clamp(t, 0.0f, 1.0f);
+        Vector3 projection = caps.top + AB * t;
+
+        Vector2 closeToCaps = caps.pos;
+        closeToCaps.x = Mathf.Clamp(closeToCaps.x, squa.pos.x - squa.extents.x, squa.pos.x + squa.extents.x);
+        closeToCaps.y = Mathf.Clamp(closeToCaps.y, squa.pos.y - squa.extents.y, squa.pos.y + squa.extents.y);
+
+       
+        return Vector2.Distance(closestToCapsule, projection) <= capsule.radius;
+    }
+     bool CheckCollisionCircles(Vector2 position1, float radius1, Vector2 position2, float radius2, out Vector2 mtv)
+    {
+        // Distance between position1 and position2
+        float distance = Vector2.Distance(position1, position2);
+
+        // Unit vector pointing FROM 2 TO 1
+        // (AB = B - A. Its up to you which is A and which is B)
+        Vector2 direction = (position1 - position2).normalized;
+
+        float radiiSum = radius1 + radius2;
+        bool collision = distance < radiiSum;
+        if (collision)
+        {
+            float depth = radiiSum - distance;
+            mtv = direction * depth;
+        }
+        else
+        {
+            mtv = Vector2.zero;
+        }
+        return collision;
+    }
+}
